@@ -1,6 +1,6 @@
 use fuels::{
-    prelude::{abigen, TxParameters},
-    test_helpers::{launch_custom_provider_and_get_wallets, AssetConfig, Config, WalletsConfig},
+    prelude::abigen,
+    test_helpers::{launch_custom_provider_and_get_wallets, AssetConfig, WalletsConfig},
     types::AssetId,
 };
 
@@ -10,39 +10,26 @@ abigen!(Predicate(
 ));
 #[tokio::test]
 async fn just_test() {
-    let provider_config = Config {
-        utxo_validation: true,
-        ..Config::local_node()
-    };
-
+    let asset_id = AssetId::default();
     let wallets_config = WalletsConfig::new_multiple_assets(
         2,
         vec![AssetConfig {
-            id: AssetId::default(),
+            id: asset_id,
             num_coins: 1,
             coin_amount: 1_000,
         }],
     );
 
-    let wallets =
-        &launch_custom_provider_and_get_wallets(wallets_config, Some(provider_config), None).await;
+    let wallets = &launch_custom_provider_and_get_wallets(wallets_config, None, None).await;
 
     let first_wallet = &wallets[0];
     let second_wallet = &wallets[1];
 
     let predicate = Predicate::load_from("out/debug/predicates-test.bin").unwrap();
 
-    let predicate_code = predicate.code();
-    let predicate_address = predicate.address();
-
     // First wallet transfers amount to predicate.
-    let _result = first_wallet
-        .transfer(
-            predicate_address,
-            500,
-            AssetId::default(),
-            TxParameters::default(),
-        )
+    predicate
+        .receive(first_wallet, 500, asset_id, None)
         .await
         .unwrap();
 
@@ -50,29 +37,20 @@ async fn just_test() {
     let balance = first_wallet
         .get_provider()
         .unwrap()
-        .get_asset_balance(predicate_address, AssetId::default())
+        .get_asset_balance(predicate.address(), asset_id)
         .await
         .unwrap();
 
     assert_eq!(balance, 500);
 
     // We use the Predicate's `encode_data()` to encode the data we want to
-    // send to the predicate.
-
-    let predicate_data: Vec<u8> = predicate.encode_data(42_u32, 42_u64);
-
+    // send to the predicate. This is a builder pattern and the function
+    // returns a new predicate.
     let amount_to_unlock = 500;
 
-    let _result = second_wallet
-        .spend_predicate(
-            predicate_address,
-            predicate_code,
-            amount_to_unlock,
-            AssetId::default(),
-            second_wallet.address(),
-            Some(predicate_data),
-            TxParameters::default(),
-        )
+    predicate
+        .encode_data(4096, 4096)
+        .spend(second_wallet, amount_to_unlock, asset_id, None)
         .await
         .unwrap();
 
@@ -80,7 +58,7 @@ async fn just_test() {
     let balance = first_wallet
         .get_provider()
         .unwrap()
-        .get_asset_balance(predicate_address, AssetId::default())
+        .get_asset_balance(predicate.address(), AssetId::default())
         .await
         .unwrap();
 
