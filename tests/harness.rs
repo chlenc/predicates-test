@@ -59,7 +59,7 @@ async fn just_test() {
     // We use the Predicate's `encode_data()` to encode the data we want to
     // send to the predicate.
 
-    let predicate_data: Vec<u8> = predicate.encode_data(42_u64);
+    let predicate_data: Vec<u8> = predicate.encode_data(42_u32, 42_u64);
 
     let amount_to_unlock = 500;
 
@@ -87,6 +87,9 @@ async fn just_test() {
     assert_eq!(balance, 0);
 
     // Second wallet balance is updated.
-    let balance = second_wallet.get_asset_balance(&AssetId::default()).await.unwrap();
+    let balance = second_wallet
+        .get_asset_balance(&AssetId::default())
+        .await
+        .unwrap();
     assert_eq!(balance, 1500);
 }
