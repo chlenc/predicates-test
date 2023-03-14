@@ -49,7 +49,7 @@ async fn just_test() {
     let amount_to_unlock = 500;
 
     predicate
-        .encode_data(4096, 4096)
+        .encode_data(4096_u64, 4096_u64)
         .spend(second_wallet, amount_to_unlock, asset_id, None)
         .await
         .unwrap();
