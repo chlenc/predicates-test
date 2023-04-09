@@ -1,13 +1,10 @@
 use fuels::{
-    prelude::abigen,
+    accounts::predicate::Predicate,
+    prelude::{abigen, Account, TxParameters, ViewOnlyAccount},
     test_helpers::{launch_custom_provider_and_get_wallets, AssetConfig, WalletsConfig},
     types::AssetId,
 };
 
-abigen!(Predicate(
-    name = "Predicate",
-    abi = "out/debug/predicates-test-abi.json"
-));
 #[tokio::test]
 async fn just_test() {
     let asset_id = AssetId::default();
@@ -25,40 +22,52 @@ async fn just_test() {
     let first_wallet = &wallets[0];
     let second_wallet = &wallets[1];
 
-    let predicate = Predicate::load_from("out/debug/predicates-test.bin").unwrap();
+    abigen!(Predicate(
+        name = "MyPredicateEncoder",
+        abi = "out/debug/predicates-test-abi.json"
+    ));
+
+    // Once we've compiled our predicate with `forc build`, we can create a `Predicate` instance via `Predicate::load_from`. The resulting data from `encode_data` can then be set on the loaded predicate.
+
+    // ```rust,ignore
+    let predicate_data = MyPredicateEncoder::encode_data(4096, 4096);
+    let code_path =
+        "../../packages/fuels/tests/predicates/basic_predicate/out/debug/basic_predicate.bin";
+
+    let predicate: Predicate = Predicate::load_from(code_path)
+        .unwrap()
+        .with_data(predicate_data)
+        .with_provider(first_wallet.try_provider().unwrap().clone());
 
     // First wallet transfers amount to predicate.
-    predicate
-        .receive(first_wallet, 500, asset_id, None)
+    first_wallet
+        .transfer(predicate.address(), 500, asset_id, TxParameters::default())
         .await
         .unwrap();
 
     // Check predicate balance.
-    let balance = first_wallet
-        .get_provider()
-        .unwrap()
-        .get_asset_balance(predicate.address(), asset_id)
+    let balance = predicate
+        .get_asset_balance(&AssetId::default())
         .await
         .unwrap();
 
     assert_eq!(balance, 500);
 
-    // We use the Predicate's `encode_data()` to encode the data we want to
-    // send to the predicate. This is a builder pattern and the function
-    // returns a new predicate.
     let amount_to_unlock = 500;
 
     predicate
-        .encode_data(4096_u64, 4096_u64)
-        .spend(second_wallet, amount_to_unlock, asset_id, None)
+        .transfer(
+            second_wallet.address(),
+            amount_to_unlock,
+            asset_id,
+            TxParameters::default(),
+        )
         .await
         .unwrap();
 
     // Predicate balance is zero.
-    let balance = first_wallet
-        .get_provider()
-        .unwrap()
-        .get_asset_balance(predicate.address(), AssetId::default())
+    let balance = predicate
+        .get_asset_balance(&AssetId::default())
         .await
         .unwrap();
 
