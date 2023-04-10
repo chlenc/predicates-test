@@ -31,8 +31,7 @@ async fn just_test() {
 
     // ```rust,ignore
     let predicate_data = MyPredicateEncoder::encode_data(4096, 4096);
-    let code_path =
-        "../../packages/fuels/tests/predicates/basic_predicate/out/debug/basic_predicate.bin";
+    let code_path = "out/debug/predicates-test.bin";
 
     let predicate: Predicate = Predicate::load_from(code_path)
         .unwrap()
