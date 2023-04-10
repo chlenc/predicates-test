@@ -1,5 +1,6 @@
 predicate;
+use std::inputs::input_owner;
 
-fn main(a: u32, b: u64) -> bool {
-    a == b
+fn main(address: Address) -> bool {
+    input_owner(0).unwrap() == address || input_owner(1).unwrap() == address
 }
