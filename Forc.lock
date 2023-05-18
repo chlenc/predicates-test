@@ -1,6 +1,6 @@
 [[package]]
 name = 'core'
-source = 'path+from-root-FDF4A5DCC6ECD181'
+source = 'path+from-root-A45E318ED12CBB09'
 
 [[package]]
 name = 'predicates-test'
@@ -9,5 +9,5 @@ dependencies = ['std']
 
 [[package]]
 name = 'std'
-source = 'git+https://github.com/fuellabs/sway?tag=v0.37.0#607ac50176db8bef936f91bacf435d0ea37d041e'
+source = 'git+https://github.com/fuellabs/sway?tag=v0.39.0#7a095280e7e1c0bfbbfc201867896e720aab7209'
 dependencies = ['core']

@@ -2,7 +2,7 @@ use fuels::{
     accounts::predicate::Predicate,
     prelude::{abigen, Account, TxParameters, ViewOnlyAccount},
     test_helpers::{launch_custom_provider_and_get_wallets, AssetConfig, WalletsConfig},
-    types::{AssetId, Address},
+    types::{Address, AssetId},
 };
 
 #[tokio::test]
@@ -27,13 +27,11 @@ async fn just_test() {
         abi = "out/debug/predicates-test-abi.json"
     ));
 
-    let predicate_data = MyPredicateEncoder::encode_data(Address::from(first_wallet.address()));
-    let code_path = "out/debug/predicates-test.bin";
-
-    let predicate: Predicate = Predicate::load_from(code_path)
+    let predicate: Predicate = Predicate::load_from("./out/debug/predicates-test.bin")
         .unwrap()
-        .with_data(predicate_data)
-        .with_provider(first_wallet.try_provider().unwrap().clone());
+        .with_provider(first_wallet.provider().unwrap().clone());
+
+    println!("Predicate root = {:?}\n", predicate.address());
 
     // First wallet transfers amount to predicate.
     first_wallet
