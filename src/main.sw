@@ -1,6 +1,7 @@
 predicate;
 use std::inputs::input_owner;
+use std::constants::{ZERO_B256};
 
-fn main(address: Address) -> bool {
-    input_owner(0).unwrap() == address || input_owner(1).unwrap() == address
+fn main() -> bool {
+    true
 }
