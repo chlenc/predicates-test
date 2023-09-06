@@ -1,7 +1,5 @@
 predicate;
-use std::inputs::input_owner;
-use std::constants::{ZERO_B256};
 
-fn main() -> bool {
-    true
+fn main(a: u32, b: u64) -> bool {
+    a.as_u64() == b
 }

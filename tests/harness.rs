@@ -2,8 +2,13 @@ use fuels::{
     accounts::predicate::Predicate,
     prelude::{abigen, Account, TxParameters, ViewOnlyAccount},
     test_helpers::{launch_custom_provider_and_get_wallets, AssetConfig, WalletsConfig},
-    types::{Address, AssetId},
+    types::AssetId,
 };
+
+abigen!(Predicate(
+    name = "MyPredicate",
+    abi = "out/debug/predicates-test-abi.json"
+));
 
 #[tokio::test]
 async fn just_test() {
@@ -20,16 +25,14 @@ async fn just_test() {
     let wallets = &launch_custom_provider_and_get_wallets(wallets_config, None, None).await;
 
     let first_wallet = &wallets[0];
-    // let second_wallet = &wallets[1];
+    let second_wallet = &wallets[1];
 
-    abigen!(Predicate(
-        name = "MyPredicateEncoder",
-        abi = "out/debug/predicates-test-abi.json"
-    ));
+    let predicate_data = MyPredicateEncoder::encode_data(4096, 4096);
 
     let predicate: Predicate = Predicate::load_from("./out/debug/predicates-test.bin")
         .unwrap()
-        .with_provider(first_wallet.provider().unwrap().clone());
+        .with_provider(first_wallet.try_provider().unwrap().clone())
+        .with_data(predicate_data);
 
     println!("Predicate root = {:?}\n", predicate.address());
 
@@ -51,7 +54,7 @@ async fn just_test() {
 
     predicate
         .transfer(
-            first_wallet.address(),
+            second_wallet.address(),
             amount_to_unlock,
             asset_id,
             TxParameters::default(),
@@ -67,10 +70,10 @@ async fn just_test() {
 
     assert_eq!(balance, 0);
 
-    // first wallet balance is updated.
-    let balance = first_wallet
+    // Second wallet balance is updated.
+    let balance = second_wallet
         .get_asset_balance(&AssetId::default())
         .await
         .unwrap();
-    assert_eq!(balance, 1000);
+    assert_eq!(balance, 1500);
 }
